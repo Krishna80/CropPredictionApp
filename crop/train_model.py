@@ -1,5 +1,9 @@
 import pandas as pd
+import numpy as np
 import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -51,6 +55,32 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 print(f"Model Accuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%")
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Compute confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+
+# 6. Plot Confusion Matrix as a Heatmap
+plt.figure(figsize=(6, 5))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=np.unique(y), yticklabels=np.unique(y))
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix Heatmap for Crop Prediction")
+plt.show()
+
+import matplotlib.pyplot as plt
+
+# Calculate accuracy for each class (if needed)
+class_accuracy = cm.diagonal() / cm.sum(axis=1)  # Diagonal values (correct) / row sum (total)
+
+# Plot class-wise accuracy
+plt.figure(figsize=(6, 5))
+plt.bar(np.unique(y_test), class_accuracy, color='blue')
+plt.xlabel('Class')
+plt.ylabel('Accuracy')
+plt.title('Class-wise Accuracy for Crop Prediction')
+plt.show()
+
+
 
 
 # Save model
