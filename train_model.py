@@ -14,7 +14,7 @@ from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, Gradient
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 # Load dataset
-file_path = "Crop_recommendation.csv"
+file_path = "New Crop 50K.csv"
 df = pd.read_csv(file_path)
 
 # Check for missing values
@@ -22,7 +22,7 @@ if df.isnull().sum().sum() > 0:
     df.dropna(inplace=True)
 
 # Select features
-features = ['temperature', 'humidity', 'ph', 'rainfall','N','P','K'] # Consider more relevant features
+features = ['temperature', 'humidity', 'ph', 'rainfall',] # Consider more relevant features
 X = df[features]
 y = df['label']
 
@@ -80,9 +80,46 @@ plt.ylabel('Accuracy')
 plt.title('Class-wise Accuracy for Crop Prediction')
 plt.show()
 
+metrics = {
+    'Model': [],
+    'Accuracy': [],
+    'Precision': [],
+    'Recall': [],
+    'F1-Score': []
+}
 
+for name, model in models.items():
+    y_pred = model.predict(X_test_scaled)
+    accuracy = accuracy_score(y_test, y_pred) * 100
+    precision = precision_score(y_test, y_pred, average='weighted') * 100
+    recall = recall_score(y_test, y_pred, average='weighted') * 100
+    f1 = f1_score(y_test, y_pred, average='weighted') * 100
+    
+    metrics['Model'].append(name)
+    metrics['Accuracy'].append(accuracy)
+    metrics['Precision'].append(precision)
+    metrics['Recall'].append(recall)
+    metrics['F1-Score'].append(f1)
+
+# Convert metrics to DataFrame for easier plotting
+metrics_df = pd.DataFrame(metrics)
+
+# Plotting the metrics in a grouped bar chart
+metrics_df.set_index('Model').plot(kind='bar', figsize=(12, 6), width=0.8)
+
+# Adding labels and title
+plt.ylabel('Percentage')
+plt.xlabel('Models')
+plt.title('Performance Metrics for GPU-Accelerated Models')
+plt.ylim(0, 100)
+plt.xticks(rotation=45, ha='right')
+plt.legend(title='Metrics')
+plt.tight_layout()
+
+# Show the plot
+plt.show()
 
 
 # Save model
 joblib.dump(model, "cropNarayangarh_model.pkl")
-print("✅ Model saved as crop_model.pkl")
+print("✅ Model saved as cropNarayangarh_model.pkl")

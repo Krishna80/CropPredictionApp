@@ -18,7 +18,7 @@ def get_weather_data(api_key, city):
         return {
             "temperature": data["main"]["temp"],
             "humidity": data["main"]["humidity"],
-            #"rainfall": data.get('rain', {}).get('1h', 0)
+            "rainfall": data.get('rain', {}).get('1h', 0)
         }
     else:
         return None
@@ -32,20 +32,20 @@ def index():
         API_KEY = "2d730e4db19e9f91a79d0efce720e6c9"  # Replace with your actual API key
         city = request.form["city"].strip()
         ph = float(request.form['ph'])
-        rainfall = float(request.form['rainfall'])
-        N = float(request.form['Nitrogen'])
-        P = float(request.form['Phosporus'])
-        K = float(request.form['Pottasium'])
+        #rainfall = float(request.form['rainfall'])
+        #N = float(request.form['Nitrogen'])
+        #P = float(request.form['Phosporus'])
+        #K = float(request.form['Pottasium'])
 
         # Fetch real-time weather data
         weather = get_weather_data(API_KEY, city)
 
         if weather:
             # Prepare input for prediction (Temperature & Humidity only)
-            input_data = np.array([[weather["temperature"], weather["humidity"],ph,rainfall,N,P,K]])
+            input_data = np.array([[weather["temperature"], weather["humidity"],ph, weather["rainfall"]]])
             prediction = model.predict(input_data)
 
-            crop_prediction = f"✅ Recommended Crop for {city}: {prediction[0]} 🌱"
+            crop_prediction = f"✅ Recommended Crop for {city}: is {prediction[0]} 🌱"
         else:
             error_message = "❌ Unable to fetch weather data. Check city name or API key."
 
