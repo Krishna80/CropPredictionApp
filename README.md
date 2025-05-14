@@ -2,13 +2,13 @@
 # Crop Prediction System
 
 This project is a **Crop Prediction System** that predicts the best crop to grow based on weather and soil conditions. It uses machine learning models to predict the most suitable crop based on the following features:
-N – Nitrogen content in the soil (in mg/kg)
-P – Phosphorus content in the soil (in mg/kg)
-K – Potassium content in the soil (in mg/kg)
-temperature – Average temperature in °C
-humidity – Average relative humidity in %
-ph – Soil pH value
-rainfall – Rainfall in mm
+-N – Nitrogen content in the soil (in mg/kg)
+-P – Phosphorus content in the soil (in mg/kg)
+-K – Potassium content in the soil (in mg/kg)
+-temperature – Average temperature in °C
+-humidity – Average relative humidity in %
+-ph – Soil pH value
+-rainfall – Rainfall in mm
 
 ## Features
 
