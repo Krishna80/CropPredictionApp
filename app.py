@@ -4,17 +4,21 @@ import requests
 import joblib
 from dotenv import load_dotenv
 import os
+
 load_dotenv()  # loads .env variables
+
 app = Flask(__name__)
 
-# Load trained model
+# Load trained model and label encoder
 model = joblib.load("Short_Model.pkl")
-le = joblib.load("label_encoder.pkl")  # Load the label encoder
+le = joblib.load("label_encoder.pkl")
 
 # Get weather using latitude and longitude
 def get_weather_data(api_key, lat, lon):
     url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
     response = requests.get(url)
+    print(f"[Weather API] Status: {response.status_code}, URL: {url}")
+    print(f"[Weather API] Response: {response.text}")
     if response.status_code == 200:
         data = response.json()
         return {
@@ -28,6 +32,8 @@ def get_weather_data(api_key, lat, lon):
 def get_location_details(lat, lon, api_key):
     url = f"https://api.opencagedata.com/geocode/v1/json?q={lat}+{lon}&key={api_key}"
     response = requests.get(url)
+    print(f"[Geocode API] Status: {response.status_code}, URL: {url}")
+    print(f"[Geocode API] Response: {response.text}")
     if response.status_code == 200:
         data = response.json()
         try:
@@ -45,7 +51,7 @@ def is_location_allowed(components):
 
     disallowed_keywords = [
         "sea", "ocean", "pond", "lake", "river", "water",
-        "building", "house", "hotel", "parking", "airport"
+        "hotel", "parking", "airport"
     ]
 
     for key, value in components.items():
@@ -65,10 +71,20 @@ def index():
 
     # Load Google Maps API key from environment
     google_maps_api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
+    # DEBUG: Print environment variables to console (remove in production)
+    print("WEATHER_API_KEY:", os.environ.get("WEATHER_API_KEY"))
+    print("GEOCODE_API_KEY:", os.environ.get("GEOCODE_API_KEY"))
+    print("GOOGLE_MAPS_API_KEY:", google_maps_api_key)
+
 
     if request.method == "POST":
-        WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY") or "your_default_weather_api_key"
-        GEOCODE_API_KEY = os.environ.get("GEOCODE_API_KEY") or "your_default_geocode_api_key"
+        WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
+        GEOCODE_API_KEY = os.environ.get("GEOCODE_API_KEY")
+
+        # Validate API keys
+        if not WEATHER_API_KEY or not GEOCODE_API_KEY:
+            error_message = "❌ API keys are missing. Please check your .env file."
+            return render_template("index.html", error_message=error_message, latitude=None, longitude=None, google_maps_api_key=google_maps_api_key)
 
         lat = request.form.get("latitude")
         lon = request.form.get("longitude")
@@ -107,15 +123,21 @@ def index():
             return render_template("index.html", error_message=error_message, latitude=latitude, longitude=longitude, google_maps_api_key=google_maps_api_key)
 
         input_data = np.array([[weather["temperature"], weather["humidity"], ph]])
+        print(f"[Prediction] Input data: {input_data}")
 
         try:
             pred_numeric = model.predict(input_data)
+            print(f"[Prediction] Numeric output: {pred_numeric}")
             pred_label = le.inverse_transform(pred_numeric)[0]
+            print(f"[Prediction] Decoded label: {pred_label}")
+
             plant_icon = '<img src="' + url_for('static', filename='crop_pic.png') + '" alt="plant icon" style="width: 20px; vertical-align: middle;">'
             crop_prediction = f"✅ Recommended Crop for {place_name}: {pred_label} {plant_icon}"
+
         except Exception as e:
-            print(f"Error making prediction: {e}")
-            error_message = "❌ Unable to make a prediction at this time."
+            import traceback
+            traceback.print_exc()
+            error_message = f"❌ Unable to make a prediction at this time: {str(e)}"
 
     return render_template(
         "index.html",
