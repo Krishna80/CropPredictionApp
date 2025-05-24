@@ -1,11 +1,11 @@
 window.initMap = function () {
-  const nepalCenter = { lat: 28.3949, lng: 84.1240 };
+  const nepalCenter = { lat: 28.3949, lng: 84.124 };
 
   const map = new google.maps.Map(document.getElementById("map"), {
     center: nepalCenter,
     zoom: 6,
     mapId: "2458abfeb3ee3012df74a013",
-    mapTypeId: 'hybrid'  // <-- This makes the map show satellite imagery
+    mapTypeId: "hybrid", // <-- This makes the map show satellite imagery
   });
 
   let marker = null;
