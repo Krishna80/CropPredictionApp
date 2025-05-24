@@ -1,0 +1,167 @@
+/* Base body styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 40px auto;
+    background-color: #f4f4f4;
+    text-align: center;
+    max-width: 1200px;
+    padding: 0 15px;
+    color: #333;
+}
+
+/* Main container */
+.container {
+    width: 60%;
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 30px 25px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.container:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Form inputs and buttons */
+input, button {
+    width: 90%;
+    max-width: 400px;
+    padding: 12px 15px;
+    margin: 12px 0;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 5px #28a745aa;
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+button:hover,
+button:focus {
+    background-color: #218838;
+    box-shadow: 0 6px 14px rgba(33, 136, 56, 0.6);
+}
+
+/* Result & error messages */
+.result {
+    margin-top: 25px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #198754; /* Bootstrap success green */
+}
+
+.error {
+    color: #dc3545; /* Bootstrap danger red */
+    font-size: 18px;
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Map container — works with Google Maps too */
+#map {
+    height: 400px;
+    width: 100%;
+    border: 2px solid #ccc;
+    border-radius: 12px;
+    margin: 25px 0;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+#map:hover {
+    box-shadow: 0 9px 25px rgba(0, 0, 0, 0.15);
+    transform: scale(1.01); /* slightly less zoom for better performance */
+}
+
+/* Help icon style */
+.help-link {
+    color: #28a745;
+    font-weight: bold;
+    margin-left: 8px;
+    font-size: 18px;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+.help-link:hover,
+.help-link:focus {
+    color: #19692c;
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .container {
+        width: 60%;
+        padding: 25px 20px;
+    }
+
+    input,
+    button {
+        width: 90%;
+        max-width: none;
+        font-size: 15px;
+        padding: 10px 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 20px 15px;
+    }
+
+    input,
+    button {
+        width: 100%;
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        margin: 20px 10px;
+    }
+
+    .container {
+        width: 100%;
+        padding: 15px 10px;
+        margin: 15px 0;
+        border-radius: 8px;
+        box-shadow: none;
+    }
+
+    input,
+    button {
+        width: 100%;
+        padding: 12px 10px;
+        font-size: 14px;
+        margin: 8px 0;
+    }
+
+    #map {
+        height: 300px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+}

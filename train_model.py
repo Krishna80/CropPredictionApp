@@ -3,138 +3,153 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from imblearn.over_sampling import SMOTE
 
-# Models
-from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from xgboost import XGBClassifier
 
 # Load dataset
 file_path = "Crop_recommendation.csv"
 df = pd.read_csv(file_path)
 
-# Drop missing values
 df.dropna(inplace=True)
 
-# Features and target
-features = ['temperature', 'humidity', 'ph',]
+features = ['temperature', 'humidity', 'ph']
 X = df[features]
 y = df['label']
 
-# Split dataset
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Encode target labels to integers
+le = LabelEncoder()
+y_encoded = le.fit_transform(y)
 
-# Models dictionary using pipeline
-models = {
-    'LogisticRegression': Pipeline([
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded)
+
+smote = SMOTE(random_state=42)
+X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
+
+pipelines = {
+    'RandomForest': Pipeline([
         ('scaler', StandardScaler()),
-        ('model', LogisticRegression(max_iter=200))
+        ('model', RandomForestClassifier(random_state=42))
     ]),
-    'GaussianNB': Pipeline([
-        ('scaler', StandardScaler()),  # Optional for Naive Bayes, but safe
-        ('model', GaussianNB())
-    ]),
-    'SVC': Pipeline([
+    'GradientBoosting': Pipeline([
         ('scaler', StandardScaler()),
-        ('model', SVC())
+        ('model', GradientBoostingClassifier(random_state=42))
     ]),
-    'KNeighborsClassifier': Pipeline([
+    'XGBoost': Pipeline([
         ('scaler', StandardScaler()),
-        ('model', KNeighborsClassifier())
-    ]),
-    'DecisionTreeClassifier': Pipeline([
-        ('model', DecisionTreeClassifier())
-    ]),
-    'ExtraTreeClassifier': Pipeline([
-        ('model', ExtraTreeClassifier())
-    ]),
-    'RandomForestClassifier': Pipeline([
-        ('model', RandomForestClassifier())
-    ]),
-    'BaggingClassifier': Pipeline([
-        ('model', BaggingClassifier())
-    ]),
-    'GradientBoostingClassifier': Pipeline([
-        ('model', GradientBoostingClassifier())
-    ]),
-    'AdaBoostClassifier': Pipeline([
-        ('model', AdaBoostClassifier())
+        ('model', XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', random_state=42))
     ])
 }
 
-# Store performance metrics
-metrics = {
-    'Model': [],
-    'Accuracy': [],
-    'Precision': [],
-    'Recall': [],
-    'F1-Score': []
+param_grids = {
+    'RandomForest': {
+        'model__n_estimators': [100, 200],
+        'model__max_depth': [10, 20, None],
+        'model__min_samples_split': [2, 5],
+    },
+    'GradientBoosting': {
+        'model__n_estimators': [100, 200],
+        'model__learning_rate': [0.05, 0.1],
+        'model__max_depth': [3, 5],
+    },
+    'XGBoost': {
+        'model__n_estimators': [100, 200],
+        'model__learning_rate': [0.05, 0.1],
+        'model__max_depth': [3, 5],
+    }
 }
 
-# Train and evaluate models
-for name, pipeline in models.items():
-    pipeline.fit(X_train, y_train)
-    y_pred = pipeline.predict(X_test)
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+results = []
+best_models = {}
+
+for name, pipeline in pipelines.items():
+    print(f"Running GridSearchCV for {name}...")
+    grid_search = GridSearchCV(
+        pipeline,
+        param_grids[name],
+        cv=cv,
+        scoring='f1_weighted',
+        n_jobs=-1,
+        verbose=1
+    )
+    grid_search.fit(X_train_resampled, y_train_resampled)
+    
+    best_models[name] = grid_search.best_estimator_
+    y_pred = grid_search.predict(X_test)
+    
     accuracy = accuracy_score(y_test, y_pred) * 100
     precision = precision_score(y_test, y_pred, average='weighted') * 100
     recall = recall_score(y_test, y_pred, average='weighted') * 100
     f1 = f1_score(y_test, y_pred, average='weighted') * 100
     
-    print(f"{name} model with accuracy: {accuracy:.2f}%")
+    print(f"{name} best parameters: {grid_search.best_params_}")
+    print(f"{name} Accuracy: {accuracy:.2f}%")
+    print(f"{name} Precision: {precision:.2f}%")
+    print(f"{name} Recall: {recall:.2f}%")
+    print(f"{name} F1 Score: {f1:.2f}%\n")
     
-    metrics['Model'].append(name)
-    metrics['Accuracy'].append(accuracy)
-    metrics['Precision'].append(precision)
-    metrics['Recall'].append(recall)
-    metrics['F1-Score'].append(f1)
+    results.append({
+        'Model': name,
+        'Accuracy': accuracy,
+        'Precision': precision,
+        'Recall': recall,
+        'F1-Score': f1
+    })
 
-# Convert metrics to DataFrame
-metrics_df = pd.DataFrame(metrics)
+metrics_df = pd.DataFrame(results)
+print(metrics_df)
+metrics_df.to_csv("model_performance_summary.csv", index=False)
 
-# Plot metrics
 metrics_df.set_index('Model').plot(kind='bar', figsize=(12, 6), width=0.8)
 plt.ylabel('Percentage')
-plt.xlabel('Models')
-plt.title('Performance Metrics for Crop Prediction Models')
+plt.xlabel('Model')
+plt.title('Performance Metrics for Crop Prediction Models (Using temp, humidity, ph)')
 plt.ylim(0, 100)
 plt.xticks(rotation=45, ha='right')
 plt.legend(title='Metrics')
 plt.tight_layout()
 plt.show()
 
-# Select best model (based on F1-score here) - adjust as needed
+# ---- Confusion matrix and Class-wise accuracy ----
 best_model_name = metrics_df.sort_values(by='F1-Score', ascending=False).iloc[0]['Model']
-final_model = models[best_model_name]
+final_model = best_models[best_model_name]
 
-# Re-train on full training set
-final_model.fit(X_train, y_train)
+# Predict on test set again (just to be sure)
 y_pred = final_model.predict(X_test)
 
-# Confusion Matrix
+# Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
-plt.figure(figsize=(6, 5))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=np.unique(y), yticklabels=np.unique(y))
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
+classes = le.inverse_transform(np.arange(len(np.unique(y_test))))
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=classes, yticklabels=classes)
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
 plt.title(f"Confusion Matrix Heatmap for {best_model_name}")
 plt.show()
 
 # Class-wise accuracy
 class_accuracy = cm.diagonal() / cm.sum(axis=1)
-plt.figure(figsize=(6, 5))
-plt.bar(np.unique(y), class_accuracy, color='green')
-plt.xlabel('Class')
-plt.ylabel('Accuracy')
-plt.title(f'Class-wise Accuracy for {best_model_name}')
+
+plt.figure(figsize=(10, 5))
+plt.bar(classes, class_accuracy, color='green')
+plt.xlabel("Crop Class")
+plt.ylabel("Accuracy")
+plt.title(f"Class-wise Accuracy for {best_model_name}")
+plt.ylim(0, 1.0)
+plt.xticks(rotation=45)
+plt.tight_layout()
 plt.show()
 
 # Save best model
 joblib.dump(final_model, "Short_Model.pkl")
-print(f"✅ Best model ({best_model_name}) saved as short_mdoel.pkl")
+joblib.dump(le, "label_encoder.pkl")
+print(f"✅ Best model ({best_model_name}) saved as Short_Model.pkl")

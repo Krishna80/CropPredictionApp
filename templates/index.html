@@ -1,69 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='crop.ico') }}">
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   
-
-    <title>Crop Recommendation System</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f4f4f4;
-            text-align: center;
-        }
-        .container {
-            width: 40%;
-            margin: auto;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        input, button {
-            width: 80%;
-            padding: 10px;
-            margin: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            font-size: 17px;
-        }
-        .result {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: bold;
-            color: green;
-        }
-        .error {
-            color: red;
-            font-size: 16px;
-        }
-    </style>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='crop.ico') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <title>Crop Recommendation System</title>
 </head>
+
 <body>
-    <div class="container">
-        <h2>🌱 Crop Recommendation System</h2>
-        <form method="POST">
-            <input type="text" name="city" placeholder="Enter City Name" required><br>
-            <input type="double" id="ph" name="ph" placeholder="Enter PH Level" required><br>
-            <button type="submit">Predict Crop</button><br>
-            
-        </form>
+  <div class="container">
+    <h2>
+      <img src="{{ url_for('static', filename='crop_pic.png') }}" alt="Plant icon"
+           style="width: 32px; vertical-align: middle; margin-right: 8px" />
+      Crop Recommendation System
+    </h2>
 
-        {% if crop_prediction %}
-            <p class="result">{{ crop_prediction }}</p>
-        {% endif %}
+    <form method="POST" action="/">
+      <label><h3>Choose Location from Map</h3></label>
+      <div id="map"></div>
 
-        {% if error_message %}
-            <p class="error">{{ error_message }}</p>
-        {% endif %}
-    </div>
+      <!-- Correct hidden inputs matching your app.py -->
+      <input type="hidden" name="latitude" id="latitude" value="{{ latitude if latitude is defined else '' }}" />
+      <input type="hidden" name="longitude" id="longitude" value="{{ longitude if longitude is defined else '' }}" />
+
+      <label for="ph">
+        Input Soil pH:
+        <a href="https://www.google.com/search?q=soil+pH+value"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="help-link"
+           title="Search soil pH value on Google">
+          &#9432;
+        </a>
+      </label>
+      <input type="number" name="ph" step="0.01" required />
+
+      <button type="submit">Predict Crop</button>
+    </form>
+
+    {% if crop_prediction %}
+    <p class="result">{{ crop_prediction | safe }}</p>
+    {% endif %}
+
+    {% if error_message %}
+    <p class="error">{{ error_message }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Your separate JS file -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+  <!-- Google Maps JS with async loading -->
+  <script async defer
+     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBMJqPVR7pig5YBlNXB9djxN03X8n9LnPY&libraries=marker&callback=initMap&loading=async">
+  </script>
 </body>
 </html>
