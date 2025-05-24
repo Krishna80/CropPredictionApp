@@ -45,7 +45,7 @@ def is_location_allowed(components):
 
     disallowed_keywords = [
         "sea", "ocean", "pond", "lake", "river", "water",
-        "building", "residential", "house", "hotel", "parking", "airport"
+        "building", "house", "hotel", "parking", "airport"
     ]
 
     for key, value in components.items():
