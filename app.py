@@ -138,6 +138,7 @@ def index():
             import traceback
             traceback.print_exc()
             error_message = f"❌ Unable to make a prediction at this time: {str(e)}"
+            error_message = "Checking File in local and cloud"
 
     return render_template(
         "index.html",
