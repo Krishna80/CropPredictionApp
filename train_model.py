@@ -43,7 +43,7 @@ pipelines = {
     ]),
     'XGBoost': Pipeline([
         ('scaler', StandardScaler()),
-        ('model', XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', random_state=42))
+        ('model', XGBClassifier(eval_metric='mlogloss', random_state=42))
     ])
 }
 
